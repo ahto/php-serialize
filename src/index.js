@@ -216,4 +216,29 @@ function unserialize(item: string, scope: Object = {}, givenOptions: Object = {}
   return unserializeItem(Buffer.from(item), 0, scope, options).value
 }
 
-module.exports = { serialize, unserialize }
+
+// Is a given variable an object? underscore.js function but
+// modified not to return true if input is a function
+function _isObject(obj: any): boolean {
+  const type = typeof obj
+  return type === 'object' && !!obj
+}
+
+// Results are returned in PHP session format.
+function serializeSession(item: any): string {
+  let s = ''
+  if (_isObject(item)) {
+    Object.keys(item).forEach(function(key) {
+      if (key.match(/\|/)) {
+        assert(false, `Top level name "${key}" may not contain pipes`)
+      } else {
+        s = `${s}${key}|${serialize(item[key])}`
+      }
+    })
+  } else {
+    assert(false, 'Unable to serialize sessions with top level types other than Object')
+  }
+  return s
+}
+
+module.exports = { serialize, unserialize, serializeSession }
